@@ -40,7 +40,6 @@ Você pode usar os seguintes comandos para controlar o Rover:
 ---
 
 ## 🛠️ 3. Guia de Início Rápido (Setup)
-### 🛠️ 3. Guia de Início Rápido (Setup)
 
 Você precisará do Python 3.12 ou superior instalado.
 1. Instale as bibliotecas necessárias:
