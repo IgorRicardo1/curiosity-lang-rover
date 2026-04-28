@@ -35,7 +35,7 @@ Você pode usar os seguintes comandos para controlar o Rover:
 | `GIRA(DIREITA)` | Vira o robô 90° para a direita. | `GIRA(DIREITA)` |
 | `GIRA(ESQUERDA)` | Vira o robô 90° para a esquerda. | `GIRA(ESQUERDA)` |
 | `REPITA n { ... }` | Repete os comandos dentro das chaves `n` vezes. | `REPITA 4 { ... }` |
-| `SE OBSTACULO ...` | Faz algo apenas se houver um bloqueio na frente. | `SE OBSTACULO ENTAO { ... }` |
+| `SE OBSTACULO ENTAO { ... }` | Executa o bloco se houver um obstáculo à frente. | `SE OBSTACULO ENTAO { AVANCA(1) }` |
 
 ---
 
@@ -64,11 +64,10 @@ Esta seção contém os detalhes rigorosos para quem está programando o sistema
 ```ebnf
 ?start: instrucao+
 
-instrucao: movimento | direcao | sensor | controle
+instrucao: movimento | direcao | controle
 
 movimento: "AVANCA(" NUMBER ")" | "RECUA(" NUMBER ")"
 direcao: "GIRA(ESQUERDA)" | "GIRA(DIREITA)"
-sensor: "DETECTA()"
 controle: "SE OBSTACULO ENTAO {" instrucao+ "}"
         | "REPITA " NUMBER " {" instrucao+ "}"
 
@@ -84,7 +83,7 @@ controle: "SE OBSTACULO ENTAO {" instrucao+ "}"
 | `0x02` | RECUA | Mover para trás | `n` (UInt16) |
 | `0x03` | GIRA_ESQ | Girar 90° à esquerda | Nenhum |
 | `0x04` | GIRA_DIR | Girar 90° à direita | Nenhum |
-| `0x05` | DETECTA | Pulo condicional se livre | Endereço (UInt16) |
+| `0x05` | DETECTA | Pulo condicional se o caminho estiver LIVRE | Endereço (UInt16) |
 | `0x00` | HALT | Encerrar execução | Nenhum |
 
 ---
