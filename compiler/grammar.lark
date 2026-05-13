@@ -1,0 +1,31 @@
+
+?start: instrucao+
+
+instrucao: movimento 
+         | direcao 
+         | controle
+
+movimento: AVANCA "(" NUMBER ")"  -> avanca
+         | RECUA "(" NUMBER ")"   -> recua
+
+direcao: GIRA "(" SENTIDO ")"     -> gira
+
+SENTIDO: DIREITA | ESQUERDA
+
+controle: SE OBSTACULO ENTAO "{" instrucao+ "}" -> se_obstaculo
+        | REPITA NUMBER "{" instrucao+ "}"      -> repita
+
+
+AVANCA: "AVANCA" | "AVA"
+RECUA: "RECUA" | "REC"
+GIRA: "GIRA" | "GIR"
+DIREITA: "DIREITA" | "DIR"
+ESQUERDA: "ESQUERDA" | "ESQ"
+REPITA: "REPITA" | "REP"
+SE: "SE"
+OBSTACULO: "OBSTACULO" | "OBS"
+ENTAO: "ENTAO"
+
+%import common.NUMBER
+%import common.WS
+%ignore WS

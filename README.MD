@@ -8,7 +8,7 @@ Este projeto é um simulador de um Rover (robô explorador) em Marte. Ele inclui
 
 ## 📖 1. O que é este projeto?
 
-Imagine que você quer dar ordens a um robô em Marte. O robô não entende português diretamente, ele entende apenas números complexos. 
+Imagine que você quer dar ordens a um robô em Marte. O robô não entende português diretamente, ele entende apenas números complexos.
 
 Este projeto faz a "ponte":
 1. Você escreve ordens simples em português (ex: `AVANCA(3)`).
@@ -57,8 +57,11 @@ Você precisará do Python 3.12 ou superior instalado.
 
 Esta seção contém os detalhes rigorosos para quem está programando o sistema.
 
-### Fluxo de Trabalho (Pipeline)
-`Arquivo .rover` ➔ `Compilador (Lark)` ➔ `Bytecode .rvc` ➔ `VM (Interpretador)` ➔ `Simulador (Pygame)`
+### Fluxo de Trabalho (Pipeline) e Status Atual
+- [x] **Front-end do Compilador (Lexer/Parser):** Traduz `Arquivo .rover` ➔ `AST` (Concluído)
+- [ ] **Back-end do Compilador (Codegen):** Traduz `AST` ➔ `Bytecode .rvc` (Pendente)
+- [ ] **Máquina Virtual (Interpretador):** Executa `Bytecode .rvc` (Pendente)
+- [ ] **Simulador (Pygame):** Interface visual (Pendente)
 
 ### Definição da Gramática (EBNF)
 ```ebnf
