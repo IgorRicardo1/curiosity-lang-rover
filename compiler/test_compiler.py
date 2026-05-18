@@ -3,7 +3,7 @@
 PIPELINE DO COMPILADOR ROVER
 =============================================================================
 
-Este script testa as duas primeiras fases do nosso compilador:
+Este script testa as três primeiras fases do nosso compilador:
 1. ANÁLISE LÉXICA (Lexer): 
    Responsável por ler o texto bruto e quebrá-lo em "Tokens" (palavras, 
    números e símbolos). Ele usa as regras definidas em maiúsculas no 
@@ -15,15 +15,20 @@ Este script testa as duas primeiras fases do nosso compilador:
    sentido gramaticalmente. Ele usa as regras em minúsculas do 
    `grammar.lark` (ex: instrucao, movimento, controle).
 
+3. GERAÇÃO DE BYTECODE (Codegen):
+   Responsável por visitar a AST e gerar as instruções lineares de baixo 
+   nível para a nossa Máquina de Pilha (ex: EMPILHA, AVANCA, PULA_SEM_OBS).
+
 O fluxo completo é: 
-Código Fonte (.rover) -> [ Lexer ] -> Tokens -> [ Parser ] -> AST (Árvore)
+Código Fonte (.rover) -> [ Lexer ] -> Tokens -> [ Parser ] -> AST -> [ Bytecode_Gen ] -> Instruções
 =============================================================================
 """
-from lexer import tokenize
+from lexer import tokenizacao
 from parser import RoverParser
+from bytecode_gen import BytecodeGenerator
 
 
-def test_full_pipeline(code):
+def teste(code):
     print("=" * 50)
     print(f"TESTANDO CÓDIGO: {code}")
     print("=" * 50)
@@ -31,7 +36,7 @@ def test_full_pipeline(code):
     print("\n1. FASE DE ANÁLISE LÉXICA (TOKENS):")
     print("-" * 30)
     try:
-        tokens = list(tokenize(code))
+        tokens = list(tokenizacao(code))
         for t in tokens:
             print(f"[{t.type:.<12}] -> '{t.value}'")
     except Exception as e:
@@ -46,16 +51,28 @@ def test_full_pipeline(code):
         print(ast.pretty())
     except Exception as e:
         print(f"Erro Sintático:\n{e}")
+        return
+    # Bytecode
+    print("\n3. FASE DE GERAÇÃO DE BYTECODE:")
+    print("-" * 30)
+    try:
+        gerador = BytecodeGenerator()
+        bytecode = gerador.gerar(ast)
+        for i, instr in enumerate(bytecode):
+            print(f"{i:03d} | {instr}")
+    except Exception as e:
+        print(f"Erro na Geração de Bytecode:\n{e}")
 
 if __name__ == "__main__":
+
     # Teste 1: Comando Simples
-    test_full_pipeline("AVANCA(10)")
+    teste("AVANCA(10)")
     
     # Teste 2: Loop e Condicional
-    test_full_pipeline("REPITA 2 { SE OBSTACULO ENTAO { GIRA(ESQUERDA) } AVANCA(1) }")
+    teste("REPITA 2 { SE OBSTACULO ENTAO { GIRA(ESQUERDA) } AVANCA(1) }")
     
     # Teste 3: Erro Proposital
-    test_full_pipeline("MOVER(5)") # 'MOVER' não existe na gramática
+    teste("MOVER(5)") # 'MOVER' não existe na gramática
     
-    # Teste 4: Usando abreviações (novo recurso!)
-    test_full_pipeline("REP 3 { SE OBS ENTAO { GIR(ESQ) } AVA(2) }")
+    # Teste 4: Usando abreviações
+    teste("REP 3 { SE OBS ENTAO { GIR(ESQ) } AVA(2) }")

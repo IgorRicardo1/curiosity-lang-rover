@@ -26,16 +26,17 @@ Este projeto faz a "ponte":
 
 ## 🕹️ 2. Comandos da Linguagem
 
-Você pode usar os seguintes comandos para controlar o Rover:
+Você pode usar os seguintes comandos para controlar o Rover (as abreviações em parênteses também são válidas!):
 
 | Comando | O que ele faz? | Exemplo |
 | :--- | :--- | :--- |
-| `AVANCA(n)` | Move o robô para frente `n` casas. | `AVANCA(3)` |
-| `RECUA(n)` | Move o robô para trás `n` casas. | `RECUA(2)` |
-| `GIRA(DIREITA)` | Vira o robô 90° para a direita. | `GIRA(DIREITA)` |
-| `GIRA(ESQUERDA)` | Vira o robô 90° para a esquerda. | `GIRA(ESQUERDA)` |
-| `REPITA n { ... }` | Repete os comandos dentro das chaves `n` vezes. | `REPITA 4 { ... }` |
-| `SE OBSTACULO ENTAO { ... }` | Executa o bloco se houver um obstáculo à frente. | `SE OBSTACULO ENTAO { AVANCA(1) }` |
+| `AVANCA(n)` ou `AVA(n)` | Move o robô para frente `n` casas. | `AVA(3)` |
+| `RECUA(n)` ou `REC(n)` | Move o robô para trás `n` casas. | `REC(2)` |
+| `GIRA(DIREITA)` ou `GIR(DIR)` | Vira o robô 90° para a direita. | `GIR(DIR)` |
+| `GIRA(ESQUERDA)` ou `GIR(ESQ)`| Vira o robô 90° para a esquerda. | `GIRA(ESQ)` |
+| `REPITA n { ... }` ou `REP n` | Repete os comandos dentro das chaves `n` vezes. | `REP 4 { AVA(1) }` |
+| `SE OBSTACULO ENTAO { ... }` ou `SE OBS ENTAO { ... }`| Executa o bloco se houver um obstáculo à frente. | `SE OBS ENTAO { REC(1) }` |
+
 
 ---
 
@@ -59,35 +60,56 @@ Esta seção contém os detalhes rigorosos para quem está programando o sistema
 
 ### Fluxo de Trabalho (Pipeline) e Status Atual
 - [x] **Front-end do Compilador (Lexer/Parser):** Traduz `Arquivo .rover` ➔ `AST` (Concluído)
-- [ ] **Back-end do Compilador (Codegen):** Traduz `AST` ➔ `Bytecode .rvc` (Pendente)
+- [x] **Back-end do Compilador (Codegen):** Traduz `AST` ➔ `Bytecode .rvc` (Concluído)
 - [ ] **Máquina Virtual (Interpretador):** Executa `Bytecode .rvc` (Pendente)
 - [ ] **Simulador (Pygame):** Interface visual (Pendente)
 
 ### Definição da Gramática (EBNF)
+A gramática atual suporta os comandos principais e suas abreviações:
 ```ebnf
 ?start: instrucao+
 
 instrucao: movimento | direcao | controle
 
-movimento: "AVANCA(" NUMBER ")" | "RECUA(" NUMBER ")"
-direcao: "GIRA(ESQUERDA)" | "GIRA(DIREITA)"
-controle: "SE OBSTACULO ENTAO {" instrucao+ "}"
-        | "REPITA " NUMBER " {" instrucao+ "}"
+movimento: AVANCA "(" NUMBER ")"  -> avanca
+         | RECUA "(" NUMBER ")"   -> recua
+
+direcao: GIRA "(" SENTIDO ")"     -> gira
+
+SENTIDO: DIREITA | ESQUERDA
+
+controle: SE OBSTACULO ENTAO "{" instrucao+ "}" -> se_obstaculo
+        | REPITA NUMBER "{" instrucao+ "}"      -> repita
+
+AVANCA: "AVANCA" | "AVA"
+RECUA: "RECUA" | "REC"
+GIRA: "GIRA" | "GIR"
+DIREITA: "DIREITA" | "DIR"
+ESQUERDA: "ESQUERDA" | "ESQ"
+REPITA: "REPITA" | "REP"
+SE: "SE"
+OBSTACULO: "OBSTACULO" | "OBS"
+ENTAO: "ENTAO"
 
 %import common.NUMBER
 %import common.WS
 %ignore WS
 ```
 
-### Tabela de Opcodes (ISA)
-| Opcode | Mnemônico | Descrição | Argumentos |
-| :--- | :--- | :--- | :--- |
-| `0x01` | AVANCA | Mover para frente | `n` (UInt16) |
-| `0x02` | RECUA | Mover para trás | `n` (UInt16) |
-| `0x03` | GIRA_ESQ | Girar 90° à esquerda | Nenhum |
-| `0x04` | GIRA_DIR | Girar 90° à direita | Nenhum |
-| `0x05` | DETECTA | Pulo condicional se o caminho estiver LIVRE | Endereço (UInt16) |
-| `0x00` | HALT | Encerrar execução | Nenhum |
+### Tabela de Opcodes e Mnemônicos (ISA)
+Nosso compilador gera instruções para uma **Máquina de Pilha**. Isso permite demonstrar de forma avançada como laços e condicionais são traduzidos em desvios e registradores.
+
+| Mnemônico | Descrição |
+| :--- | :--- |
+| `EMPILHA n` | Coloca o valor numérico `n` no topo da pilha. |
+| `AVANCA` | Consome o valor do topo da pilha e move o robô para frente. |
+| `RECUA` | Consome o valor do topo da pilha e move o robô para trás. |
+| `GIRA_ESQUERDA` | Vira o robô 90° à esquerda. |
+| `GIRA_DIREITA` | Vira o robô 90° à direita. |
+| `PULA_SEM_OBS rotulo` | Pula a execução para um `ROTULO` se o caminho à frente estiver livre. (Usado no SE OBSTACULO). |
+| `SALVA_REG reg` | Salva o valor do topo da pilha em um registrador (ex: `REG1`). Usado para inicializar o loop `REPITA`. |
+| `DEC_PULA_NZ reg, rotulo`| Decrementa o valor do registrador. Se o resultado NÃO for zero, pula de volta para o `ROTULO`. |
+| `ROTULO nome` | Marca um endereço/destino para pulos no código. |
 
 ---
 
