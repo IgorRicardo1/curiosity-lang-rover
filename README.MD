@@ -1,4 +1,4 @@
-# 🚀 Rover Compilador - Curiosity-L
+# Rover Compilador - Curiosity-L
 
 **Repositório:** [github.com/IgorRicardo1/curiosity-lang-rover](https://github.com/IgorRicardo1/curiosity-lang-rover)
 
@@ -6,9 +6,9 @@ Este projeto é um simulador de um Rover (robô explorador) em Marte. Ele inclui
 
 ---
 
-## 📖 1. O que é este projeto?
+## 1. O que é este projeto?
 
-Imagine que você quer dar ordens a um robô em Marte. O robô não entende português diretamente, ele entende apenas números complexos.
+Imagine que você quer dar ordens a um robô em Marte. O robô não entende português diretamente — ele executa **instruções de baixo nível** (IR e binário `.rvc`).
 
 Este projeto faz a "ponte":
 1. Você escreve ordens simples em português (ex: `AVANCA(3)`).
@@ -16,15 +16,17 @@ Este projeto faz a "ponte":
 3. Nossa **Máquina Virtual** executa essas ordens.
 4. Você vê o resultado em uma tela colorida (o **Simulador**).
 
-### 🔍 Pequeno Glossário
+### Pequeno Glossário
 *   **Código-fonte (.rover):** É o seu arquivo de texto com as ordens para o robô.
-*   **Compilador:** O "tradutor" que transforma seu texto em um arquivo que o robô entende.
-*   **Bytecode (.rvc):** O arquivo final traduzido (binário).
+*   **Tokens:** Pedacinhos do código reconhecidos pelo lexer (palavras-chave, números, símbolos).
+*   **AST:** Árvore de Sintaxe Abstrata — estrutura que o parser monta a partir dos tokens.
+*   **Compilador:** O "tradutor" que transforma seu texto em instruções que o robô entende.
+*   **Bytecode (.rvc):** O resultado final da compilação (instruções de baixo nível).
 *   **Simulador:** A janela que abre e mostra o robô se movendo no mapa.
 
 ---
 
-## 🕹️ 2. Comandos da Linguagem
+## 2. Comandos da Linguagem
 
 Você pode usar os seguintes comandos para controlar o Rover (as abreviações em parênteses também são válidas!):
 
@@ -40,29 +42,73 @@ Você pode usar os seguintes comandos para controlar o Rover (as abreviações e
 
 ---
 
-## 🛠️ 3. Guia de Início Rápido (Setup)
+## 3. Guia de Início Rápido (Setup)
 
 Você precisará do Python 3.12 ou superior instalado.
 1. Instale as bibliotecas necessárias:
    ```bash
-   pip install pygame lark
+   pip install -r requirements.txt
    ```
-2. Execute o projeto:
+2. Para testar se o compilador ta vivo (roda todos os testes de uma vez):
    ```bash
-   python main.py
+   python -m compiler.test_compiler
+   ```
+   *Nota: roda sempre com o `-m` a partir da raiz do projeto, senao o Python da erro de import relativo!*
+
+3. Para compilar um arquivo de texto para o nosso binário alienígena `.rvc`:
+   ```bash
+   python main.py compilar examples/exemplo.rover
+   ```
+
+4. Para ver o Rover rodando de verdade (executa o arquivo na Máquina Virtual):
+   ```bash
+   python main.py executar examples/exemplo.rover
+   ```
+   Se você quiser rodar direto o arquivo binário gerado (pula o compilador), usa a flag `--rvc`:
+   ```bash
+   python main.py executar examples/exemplo.rvc --rvc
    ```
 
 ---
 
-## 🤓 4. Especificações Técnicas (Para Desenvolvedores)
+## 4. Especificações Técnicas
 
-Esta seção contém os detalhes rigorosos para quem está programando o sistema.
+Detalhes técnicos da implementação do compilador e da máquina virtual.
 
 ### Fluxo de Trabalho (Pipeline) e Status Atual
-- [x] **Front-end do Compilador (Lexer/Parser):** Traduz `Arquivo .rover` ➔ `AST` (Concluído)
-- [x] **Back-end do Compilador (Codegen):** Traduz `AST` ➔ `Bytecode .rvc` (Concluído)
-- [ ] **Máquina Virtual (Interpretador):** Executa `Bytecode .rvc` (Pendente)
+- [x] **Análise Léxica (Lexer):** Traduz texto `.rover` ➔ **tokens** (Concluído)
+- [x] **Análise Sintática (Parser):** Traduz tokens ➔ **AST** (Concluído)
+- [x] **Back-end do Compilador (Codegen):** Traduz AST ➔ **IR** (mnemônicos) (Concluído)
+- [x] **Emissor binário:** Traduz IR ➔ **`.rvc`** (bytes) (Concluído)
+- [x] **Validação:** IR e binário (`vm/validador.py`)
+- [x] **Leitor binário:** `vm/carregar.py` + `vm/isa.decodificar`
+- [x] **Máquina Virtual:** fetch-decode-execute (`vm/maquina.py`)
 - [ ] **Simulador (Pygame):** Interface visual (Pendente)
+
+O pipeline completo do compilador segue o fluxo clássico:
+
+```
+Código-fonte (.rover) → [Lexer] → Tokens → [Parser] → AST → [Codegen] → IR → [Emissor] → .rvc
+```
+
+Cada fase é independente e perfeitamente isolada. O parser **não relê o texto-fonte** — ele consome os tokens injetados pelo lexer através da classe ponte `TokenStreamLexer`. Essa abordagem acadêmica rigorosa impede a duplicação de processos, injetando os tokens gerados diretamente no Earley Parser do Lark.
+
+### Arquitetura do Compilador (`/compiler`)
+
+| Arquivo | Responsabilidade |
+| :--- | :--- |
+| `grammar.lark` | Gramática da linguagem (tokens em MAIÚSCULAS, regras em minúsculas) |
+| `lexer.py` | Análise léxica: `tokenizacao(codigo)` → tokens |
+| `parser.py` | Análise sintática: `parse_tokens(tokens)` → AST |
+| `gerador_ir.py` | Geração de IR a partir da AST (`GeradorIR`) |
+| `ir.py` | Estrutura `ProgramaIR` (instruções + tabela de rótulos) |
+| `emissor.py` | Emissão IR → bytes `.rvc` |
+| `test_compiler.py` | Script de teste das fases do compilador |
+| `__init__.py` | `compilar()` e `para_binario()` |
+
+**Erros separados por fase:**
+- **Erro léxico** — palavra ou símbolo desconhecido (ex: `MOVER(5)`).
+- **Erro sintático** — tokens válidos, mas ordem/estrutura inválida (ex: `AVANCA()` sem número).
 
 ### Definição da Gramática (EBNF)
 A gramática atual suporta os comandos principais e suas abreviações:
@@ -96,8 +142,36 @@ ENTAO: "ENTAO"
 %ignore WS
 ```
 
-### Tabela de Opcodes e Mnemônicos (ISA)
-Nosso compilador gera instruções para uma **Máquina de Pilha**. Isso permite demonstrar de forma avançada como laços e condicionais são traduzidos em desvios e registradores.
+### IR e binário (.rvc)
+
+O compilador tem **duas saídas**:
+
+1. **IR** (`ProgramaIR`) — mnemônicos legíveis + tabela de rótulos (debug e apresentação).
+2. **Binário** (`.rvc`) — sequência de bytes que a VM decodifica em instruções (`emissor.py`).
+
+**Importante — saltos por índice de instrução:**  
+Valores em `PULA_SEM_OBS` e `DEC_PULA_NZ` referem-se ao **número da instrução** na lista IR (0, 1, 2…), **não** ao offset em bytes no arquivo `.rvc`. A VM deve carregar o binário numa lista `instrucoes[]` e usar `pc` como índice nessa lista.
+
+**Arquivo `.rvc`:** apenas o corpo binário (sem cabeçalho), para simplificar a VM.
+
+**Codificação (1 byte = opcode):**
+
+| Opcode | Mnemônico IR | Operandos (bytes) |
+| :---: | :--- | :--- |
+| `0x01` | `EMPILHA n` | `n` (1 byte, 0–255) |
+| `0x02` | `AVANCA` | — |
+| `0x03` | `RECUA` | — |
+| `0x04` | `GIRA_ESQUERDA` | — |
+| `0x05` | `GIRA_DIREITA` | — |
+| `0x06` | `PULA_SEM_OBS idx` | índice da instrução (2 bytes, little-endian) |
+| `0x07` | `SALVA_REG reg` | número do reg (1 byte) |
+| `0x08` | `DEC_PULA_NZ reg, idx` | reg (1 byte) + índice da instrução (2 bytes) |
+
+Rótulos **não** entram no binário — só índices já resolvidos nos saltos.
+
+**Exemplo:** `AVA(3)` → IR `EMPILHA 3`, `AVANCA` → binário `01 03 02`.
+
+### Tabela de Mnemônicos (ISA — IR)
 
 | Mnemônico | Descrição |
 | :--- | :--- |
@@ -106,28 +180,33 @@ Nosso compilador gera instruções para uma **Máquina de Pilha**. Isso permite 
 | `RECUA` | Consome o valor do topo da pilha e move o robô para trás. |
 | `GIRA_ESQUERDA` | Vira o robô 90° à esquerda. |
 | `GIRA_DIREITA` | Vira o robô 90° à direita. |
-| `PULA_SEM_OBS rotulo` | Pula a execução para um `ROTULO` se o caminho à frente estiver livre. (Usado no SE OBSTACULO). |
-| `SALVA_REG reg` | Salva o valor do topo da pilha em um registrador (ex: `REG1`). Usado para inicializar o loop `REPITA`. |
-| `DEC_PULA_NZ reg, rotulo`| Decrementa o valor do registrador. Se o resultado NÃO for zero, pula de volta para o `ROTULO`. |
-| `ROTULO nome` | Marca um endereço/destino para pulos no código. |
+| `PULA_SEM_OBS end` | Pula para o índice `end` se o caminho à frente estiver livre (SE OBSTACULO). |
+| `SALVA_REG reg` | Salva o topo da pilha no registrador (loop REPITA). |
+| `DEC_PULA_NZ reg, end` | Decrementa o reg.; se ≠ 0, pula para `end`. |
 
 ---
 
-## 🗺️ 5. Ambiente e Grid
+## 5. Ambiente e Grid
 - **Mapa:** Matriz de **15 x 15** unidades.
 - **Coordenadas:** De `(0,0)` até `(14,14)`.
 - **Obstáculos:** Se o Rover tentar entrar em uma célula com obstáculo, a execução para e um alerta é exibido.
 
 ---
 
-## 👥 6. Organização e Contribuição
+## 6. Organização e Contribuição
 
 ### Estrutura de Pastas
-*   `/compiler`: Lógica de tradução (Lark e Bytecode).
-*   `/vm`: Motor que executa o arquivo `.rvc`.
-*   `/simulator`: Parte visual (Pygame e Grid).
-*   `/examples`: Pasta para os scripts que serão criados.
-*   `/docs`: Documentos técnicos e PDF da Atividade A3.
+*   `/compiler`: Lógica de tradução — lexer, parser, codegen (Lark + bytecode).
+    *   `grammar.lark` — definição da gramática
+    *   `lexer.py` / `parser.py` — fases léxica e sintática (cada um com sua instância Lark)
+    *   `gerador_ir.py` — geração de IR
+    *   `test_compiler.py` — testes do pipeline
+*   `/vm`: Leitor binário, validação, VM (`isa`, `carregar`, `validador`, `maquina`, `estado`).
+*   `/simulator`: Parte visual (Pygame e Grid) (pendente).
+*   `/examples`: Pasta para scripts `.rover` de exemplo (a criar).
+*   `/docs`: Documentos técnicos e PDF da Atividade A3 (a criar).
+*   `main.py`: CLI (`compilar`, `executar` — VM em breve).
+*   `examples/`: Scripts `.rover` de exemplo.
 
 ### Regras de Ouro
 1. **Branches:** Nunca mude a `main` direto. Use `feature/nome-da-task`.

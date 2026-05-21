@@ -1,78 +1,82 @@
 """
-=============================================================================
-PIPELINE DO COMPILADOR ROVER
-=============================================================================
+Para rodar os testes e ver se ta tudo funcionando, usa esse comando no terminal, na pasta raiz do projeto:
+python -m compiler.test_compiler
 
-Este script testa as três primeiras fases do nosso compilador:
-1. ANÁLISE LÉXICA (Lexer): 
-   Responsável por ler o texto bruto e quebrá-lo em "Tokens" (palavras, 
-   números e símbolos). Ele usa as regras definidas em maiúsculas no 
-   `grammar.lark` (ex: AVANCA, NUMBER, LPAR).
-
-2. ANÁLISE SINTÁTICA (Parser): 
-   Responsável por pegar a lista de Tokens gerada pelo Lexer e organizá-los 
-   em uma Árvore de Sintaxe Abstrata (AST), validando se as ordens fazem 
-   sentido gramaticalmente. Ele usa as regras em minúsculas do 
-   `grammar.lark` (ex: instrucao, movimento, controle).
-
-3. GERAÇÃO DE BYTECODE (Codegen):
-   Responsável por visitar a AST e gerar as instruções lineares de baixo 
-   nível para a nossa Máquina de Pilha (ex: EMPILHA, AVANCA, PULA_SEM_OBS).
-
-O fluxo completo é: 
-Código Fonte (.rover) -> [ Lexer ] -> Tokens -> [ Parser ] -> AST -> [ Bytecode_Gen ] -> Instruções
-=============================================================================
+Lembrete: nao roda direto clicando no play do VSCode ou 'python test_compiler.py' senao os imports relativos vao dar erro.
 """
-from lexer import tokenizacao
-from parser import RoverParser
-from bytecode_gen import BytecodeGenerator
-
+from .emissor import emitir, formatar_hex
+from .gerador_ir import GeradorIR
+from .lexer import tokenizacao
+from .parser import RoverParser
 
 def teste(code):
-    print("=" * 50)
-    print(f"TESTANDO CÓDIGO: {code}")
-    print("=" * 50)
-    #Lexer
-    print("\n1. FASE DE ANÁLISE LÉXICA (TOKENS):")
+    print("---")
+    print(f"TESTANDO CODIGO: {code}")
+    print("---")
+
+    print("\n1. FASE DE ANALISE LEXICA (TOKENS):")
     print("-" * 30)
     try:
         tokens = list(tokenizacao(code))
         for t in tokens:
-            print(f"[{t.type:.<12}] -> '{t.value}'")
+            print(f"Token({t.type}, '{t.value}')")
     except Exception as e:
-        print(f"Erro Léxico: {e}")
+        print(f"Erro Lexico: {e}")
         return
-    #parser
-    print("\n2. FASE DE ANÁLISE SINTÁTICA (AST):")
+
+    print("\n2. FASE DE ANALISE SINTATICA (AST):")
     print("-" * 30)
     try:
         parser = RoverParser()
-        ast = parser.parse(code)
+        ast = parser.parse_tokens(tokens)
         print(ast.pretty())
     except Exception as e:
-        print(f"Erro Sintático:\n{e}")
+        print(f"Erro Sintatico:\n{e}")
         return
-    # Bytecode
-    print("\n3. FASE DE GERAÇÃO DE BYTECODE:")
+
+    print("\n3. FASE DE GERACAO DE IR:")
     print("-" * 30)
     try:
-        gerador = BytecodeGenerator()
-        bytecode = gerador.gerar(ast)
-        for i, instr in enumerate(bytecode):
-            print(f"{i:03d} | {instr}")
+        programa = GeradorIR().gerar(ast)
+        print("Instrucoes (saltos usam indice de instrucao, nao byte):")
+        for i, instr in enumerate(programa.instrucoes):
+            print(f"  {i:03d} | {instr}")
+        if programa.rotulos:
+            print("Rotulos (referencia para explicacao):")
+            for nome, indice in programa.rotulos.items():
+                print(f"  {nome} -> instrucao {indice}")
     except Exception as e:
-        print(f"Erro na Geração de Bytecode:\n{e}")
+        print(f"Erro na Geracao de IR:\n{e}")
+        return
+
+    print("\n4. FASE DE EMISSAO BINARIA (.rvc):")
+    print("-" * 30)
+    try:
+        binario = emitir(programa)
+        print(f"  Tamanho: {len(binario)} bytes")
+        print(formatar_hex(binario))
+
+        print("\n5. VALIDACAO E VM (fetch-decode-execute):")
+        print("-" * 30)
+        from vm import executar_binario
+        from vm.validador import validar_ir, validar_binario
+
+        erros_ir = validar_ir(programa)
+        erros_bin = validar_binario(binario)
+        if erros_ir or erros_bin:
+            for e in erros_ir + erros_bin:
+                print(f"  ERRO: {e}")
+        else:
+            print("  IR e binario validos.")
+            vm = executar_binario(binario)
+            print(f"  {vm.resumo()}")
+    except Exception as e:
+        print(f"Erro:\n{e}")
+
 
 if __name__ == "__main__":
-
-    # Teste 1: Comando Simples
     teste("AVANCA(10)")
-    
-    # Teste 2: Loop e Condicional
     teste("REPITA 2 { SE OBSTACULO ENTAO { GIRA(ESQUERDA) } AVANCA(1) }")
-    
-    # Teste 3: Erro Proposital
-    teste("MOVER(5)") # 'MOVER' não existe na gramática
-    
-    # Teste 4: Usando abreviações
+    teste("MOVER(5)")
+    teste("AVANCA()")
     teste("REP 3 { SE OBS ENTAO { GIR(ESQ) } AVA(2) }")

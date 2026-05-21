@@ -1,0 +1,4 @@
+REPITA 4 {
+  AVANCA(2)
+  GIRA(DIREITA)
+}
