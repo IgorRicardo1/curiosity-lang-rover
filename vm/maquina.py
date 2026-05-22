@@ -86,7 +86,7 @@ class MaquinaVirtual:
             reg, indice = args[0], args[1]
             valor = self.regs.get(reg, 0) - 1
             self.regs[reg] = valor
-            if valor != 0:
+            if valor > 0:
                 return indice
             return self.pc + 1
 

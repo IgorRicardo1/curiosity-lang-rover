@@ -66,15 +66,24 @@ class GeradorIR:
     def obter_numero(self, nodo):
         for c in nodo.children:
             if hasattr(c, "type") and c.type == "NUMBER":
-                return c.value
+                val = int(c.value)
+                if not 0 <= val <= 255:
+                    raise ValueError(f"Numero fora do limite permitido (0-255): {val}")
+                return val
         raise RuntimeError(f"AST corrompida: Numero esperado na instrucao {nodo.data.upper()}")
 
     def visita_avanca(self, nodo):
-        self.instrucoes.append(f"EMPILHA {self.obter_numero(nodo)}")
+        numero = self.obter_numero(nodo)
+        if numero <= 0:
+            return
+        self.instrucoes.append(f"EMPILHA {numero}")
         self.instrucoes.append("AVANCA")
 
     def visita_recua(self, nodo):
-        self.instrucoes.append(f"EMPILHA {self.obter_numero(nodo)}")
+        numero = self.obter_numero(nodo)
+        if numero <= 0:
+            return
+        self.instrucoes.append(f"EMPILHA {numero}")
         self.instrucoes.append("RECUA")
 
     def visita_gira(self, nodo):
@@ -95,10 +104,14 @@ class GeradorIR:
         self.marcar_rotulo(rotulo_fim)
 
     def visita_repita(self, nodo):
+        numero = self.obter_numero(nodo)
+        if numero <= 0:
+            return
+            
         rotulo_inicio = self.novo_rotulo()
         registrador = self.novo_reg()
 
-        self.instrucoes.append(f"EMPILHA {self.obter_numero(nodo)}")
+        self.instrucoes.append(f"EMPILHA {numero}")
         self.instrucoes.append(f"SALVA_REG {registrador}")
         self.marcar_rotulo(rotulo_inicio)
 

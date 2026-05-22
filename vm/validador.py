@@ -20,7 +20,6 @@ def validar_ir(programa: ProgramaIR) -> list[str]:
     n = len(programa.instrucoes)
 
     if n == 0:
-        erros.append("Programa IR vazio")
         return erros
 
     for i, linha in enumerate(programa.instrucoes):
@@ -50,7 +49,6 @@ def validar_instrucoes(programa: list[Instrucao]) -> list[str]:
     n = len(programa)
 
     if n == 0:
-        erros.append("Programa vazio")
         return erros
 
     for i, ins in enumerate(programa):
