@@ -1,5 +1,8 @@
+import logging
+import time
 from .ir import ProgramaIR
 
+logger = logging.getLogger(__name__)
 
 class GeradorIR:
     def __init__(self):
@@ -9,15 +12,19 @@ class GeradorIR:
         self.contador_regs = 0
 
     def gerar(self, ast) -> ProgramaIR:
+        inicio = time.time()
         self.instrucoes = []
         self.rotulos = {}
         self.contador_rotulos = 0
         self.contador_regs = 0
         self.visitar(ast)
-        return ProgramaIR(
+        programa = ProgramaIR(
             instrucoes=self._resolver_saltos(),
             rotulos=dict(self.rotulos),
         )
+        tempo = time.time() - inicio
+        logger.debug(f"[GERADOR] Emitidas {len(programa.instrucoes)} instrucoes IR em {tempo:.4f}s")
+        return programa
 
     def novo_rotulo(self):
         self.contador_rotulos += 1

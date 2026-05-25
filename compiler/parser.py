@@ -29,10 +29,19 @@ def get_token_parser() -> Lark:
     return _token_parser
 
 
+import logging
+import time
+
+logger = logging.getLogger(__name__)
+
 class RoverParser:
     def __init__(self):
         self._parser = get_token_parser()
 
     def parse_tokens(self, tokens):
         """Tokens (saída do lexer) → AST."""
-        return self._parser.parse(tokens)
+        inicio = time.time()
+        ast = self._parser.parse(tokens)
+        tempo = time.time() - inicio
+        logger.debug(f"[PARSER] AST gerada em {tempo:.4f}s")
+        return ast

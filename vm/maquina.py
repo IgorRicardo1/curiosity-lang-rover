@@ -3,6 +3,7 @@ Maquina Virtual — ciclo fetch, decode, execute.
 
 pc = indice na lista de instrucoes (mesma numeracao da IR).
 """
+
 from .estado import NOMES_DIRECAO, Rover, Mapa, DELTAS
 from .isa import (
     Instrucao,
@@ -15,6 +16,12 @@ from .isa import (
     OP_RECUA,
     OP_SALVA_REG,
 )
+
+
+import logging
+import time
+
+logger = logging.getLogger(__name__)
 
 
 class ErroVM(Exception):
@@ -33,17 +40,34 @@ class MaquinaVirtual:
         self.mensagem: str | None = None
 
     def executar(self) -> Rover:
+        inicio = time.time()
+        instrucoes_executadas = 0
         while self.pc < len(self.programa) and not self.parado:
             instr = self._fetch()
             self.pc = self._execute(instr)
+            instrucoes_executadas += 1
+            if instrucoes_executadas % 100000 == 0:
+                logger.debug(
+                    f"[VM] Executadas {instrucoes_executadas} instrucoes ate agora..."
+                )
+
+        tempo = time.time() - inicio
+        if tempo > 0:
+            cps = instrucoes_executadas / tempo
+            logger.debug(
+                f"[VM] FIM: Executadas {instrucoes_executadas} instrucoes em {tempo:.4f}s ({cps:.0f} inst/s)"
+            )
+        else:
+            logger.debug(
+                f"[VM] FIM: Executadas {instrucoes_executadas} instrucoes (muito rapido)"
+            )
+
         return self.rover
 
     def _fetch(self) -> Instrucao:
-        # Pega a proxima instrucao baseada no PC
         return self.programa[self.pc]
 
     def _execute(self, instr: Instrucao) -> int:
-        # Decodifica e executa alterando o estado
         op = instr.opcode
         args = instr.operandos
 

@@ -1,15 +1,22 @@
 """
 Emissor — traduz ProgramaIR (texto) para bytes .rvc (sem cabecalho).
 """
+import logging
+import time
 from .ir import ProgramaIR
 from vm.isa import codificar_linha_ir
 
+logger = logging.getLogger(__name__)
 
 def emitir(programa: ProgramaIR) -> bytes:
+    inicio = time.time()
     corpo = bytearray()
     for linha in programa.instrucoes:
         corpo.extend(codificar_linha_ir(linha))
-    return bytes(corpo)
+    resultado = bytes(corpo)
+    tempo = time.time() - inicio
+    logger.debug(f"[EMISSOR] Gerados {len(resultado)} bytes em {tempo:.4f}s")
+    return resultado
 
 
 def salvar_rvc(programa: ProgramaIR, caminho: str) -> bytes:
