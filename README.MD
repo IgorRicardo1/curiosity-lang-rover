@@ -64,9 +64,23 @@ Você precisará do Python 3.12 ou superior instalado.
    ```bash
    python main.py executar examples/exemplo.rover
    ```
+   Interface visual inclui tema marciano, trilha animada do rover, partículas de poeira, camera shake em colisões, HUD de missão e alertas dinâmicos com áudio ambiente/SFX.
+   Controles da janela:
+   - `SPACE`: pausa/retoma animação
+   - `R`: reinicia o replay da missão
+   - `M`: ativa/desativa áudio
+   - `ESC`: fecha o simulador
+   O modo visual com Pygame abre por padrão. Para executar sem janela (modo texto/headless):
+   ```bash
+   python main.py executar examples/exemplo.rover --no-visual
+   ```
    Se você quiser rodar direto o arquivo binário gerado (pula o compilador), usa a flag `--rvc`:
    ```bash
    python main.py executar examples/exemplo.rvc --rvc
+   ```
+   Também funciona em modo headless:
+   ```bash
+   python main.py executar examples/exemplo.rvc --rvc --no-visual
    ```
 
 ---
@@ -83,7 +97,7 @@ Detalhes técnicos da implementação do compilador e da máquina virtual.
 - [x] **Validação:** IR e binário (`vm/validador.py`)
 - [x] **Leitor binário:** `vm/carregar.py` + `vm/isa.decodificar`
 - [x] **Máquina Virtual:** fetch-decode-execute (`vm/maquina.py`)
-- [ ] **Simulador (Pygame):** Interface visual (Pendente)
+- [x] **Simulador (Pygame):** Grid 15x15, animação do rover e alertas visuais
 
 O pipeline completo do compilador segue o fluxo clássico:
 
@@ -202,7 +216,7 @@ Rótulos **não** entram no binário — só índices já resolvidos nos saltos.
     *   `gerador_ir.py` — geração de IR
     *   `test_compiler.py` — testes do pipeline
 *   `/vm`: Leitor binário, validação, VM (`isa`, `carregar`, `validador`, `maquina`, `estado`).
-*   `/simulator`: Parte visual (Pygame e Grid) (pendente).
+*   `/simulator`: Parte visual (Pygame, Grid, animação e alertas).
 *   `/examples`: Pasta para scripts `.rover` de exemplo (a criar).
 *   `/docs`: Documentos técnicos e PDF da Atividade A3 (a criar).
 *   `main.py`: CLI (`compilar`, `executar` — VM em breve).

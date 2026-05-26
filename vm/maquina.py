@@ -3,6 +3,9 @@ Maquina Virtual — ciclo fetch, decode, execute.
 
 pc = indice na lista de instrucoes (mesma numeracao da IR).
 """
+from dataclasses import dataclass
+from typing import Callable
+
 from .estado import NOMES_DIRECAO, Rover, Mapa, DELTAS
 from .isa import (
     Instrucao,
@@ -21,8 +24,22 @@ class ErroVM(Exception):
     pass
 
 
+@dataclass(frozen=True)
+class EventoVM:
+    tipo: str
+    x: int
+    y: int
+    direcao: int
+    mensagem: str | None = None
+
+
 class MaquinaVirtual:
-    def __init__(self, programa: list[Instrucao], mapa: Mapa | None = None):
+    def __init__(
+        self,
+        programa: list[Instrucao],
+        mapa: Mapa | None = None,
+        ao_evento: Callable[[EventoVM], None] | None = None,
+    ):
         self.programa = programa
         self.mapa = mapa or Mapa()
         self.rover = Rover()
@@ -31,11 +48,15 @@ class MaquinaVirtual:
         self.pc = 0
         self.parado = False
         self.mensagem: str | None = None
+        self._ao_evento = ao_evento
 
     def executar(self) -> Rover:
+        self._emitir_evento("inicio")
         while self.pc < len(self.programa) and not self.parado:
             instr = self._fetch()
             self.pc = self._execute(instr)
+        if not self.parado:
+            self._emitir_evento("fim")
         return self.rover
 
     def _fetch(self) -> Instrucao:
@@ -70,10 +91,12 @@ class MaquinaVirtual:
 
         if op == OP_GIRA_ESQUERDA:
             self.rover.direcao = (self.rover.direcao - 1) % 4
+            self._emitir_evento("giro")
             return self.pc + 1
 
         if op == OP_GIRA_DIREITA:
             self.rover.direcao = (self.rover.direcao + 1) % 4
+            self._emitir_evento("giro")
             return self.pc + 1
 
         if op == OP_PULA_SEM_OBS:
@@ -106,12 +129,28 @@ class MaquinaVirtual:
             if not self.mapa.dentro(nx, ny):
                 self.parado = True
                 self.mensagem = f"Rover saiu do mapa em ({nx}, {ny})"
+                self._emitir_evento("colisao", self.mensagem)
                 return
             if self.mapa.tem_obstaculo(nx, ny):
                 self.parado = True
                 self.mensagem = f"Colisao com obstaculo em ({nx}, {ny})"
+                self._emitir_evento("colisao", self.mensagem)
                 return
             self.rover.x, self.rover.y = nx, ny
+            self._emitir_evento("movimento")
+
+    def _emitir_evento(self, tipo: str, mensagem: str | None = None) -> None:
+        if self._ao_evento is None:
+            return
+        self._ao_evento(
+            EventoVM(
+                tipo=tipo,
+                x=self.rover.x,
+                y=self.rover.y,
+                direcao=self.rover.direcao,
+                mensagem=mensagem,
+            )
+        )
 
     def resumo(self) -> str:
         d = NOMES_DIRECAO[self.rover.direcao]

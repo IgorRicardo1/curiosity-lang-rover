@@ -3,8 +3,8 @@ main.py — CLI do Rover Compilador.
 
 Uso:
   python main.py compilar programa.rover [-o saida.rvc]
-  python main.py executar programa.rover
-  python main.py executar programa.rvc --rvc
+  python main.py executar programa.rover [--no-visual]
+  python main.py executar programa.rvc --rvc [--no-visual]
 """
 import argparse
 import sys
@@ -12,7 +12,8 @@ from pathlib import Path
 
 from compiler import compilar, para_binario, salvar_rvc
 from compiler.emissor import formatar_hex
-from vm import executar_arquivo_rvc, executar_binario
+from vm import executar_arquivo_rvc, executar_binario, validar_instrucoes
+from vm.carregar import carregar_arquivo, carregar_bytes
 from vm.estado import Mapa
 from vm.maquina import ErroVM
 
@@ -42,18 +43,39 @@ def cmd_compilar(arquivo: Path, saida: Path | None) -> int:
     return 0
 
 
-def cmd_executar(arquivo: Path, usar_rvc: bool) -> int:
+def cmd_executar(arquivo: Path, usar_rvc: bool, no_visual: bool) -> int:
     mapa = Mapa()
+    programa = []
 
     if usar_rvc:
-        vm = executar_arquivo_rvc(arquivo, mapa)
+        programa = carregar_arquivo(arquivo)
+        erros = validar_instrucoes(programa)
+        if erros:
+            raise ValueError("Programa invalido:\n  - " + "\n  - ".join(erros))
     else:
         codigo = ler_rover(arquivo)
-        programa = compilar(codigo)
-        binario = para_binario(programa)
-        print(f"Compilado: {len(programa.instrucoes)} instrucoes, {len(binario)} bytes")
+        programa_ir = compilar(codigo)
+        binario = para_binario(programa_ir)
+        programa = carregar_bytes(binario)
+        print(f"Compilado: {len(programa_ir.instrucoes)} instrucoes, {len(binario)} bytes")
+
+    if no_visual:
         print("\nExecucao VM (fetch -> decode -> execute):")
-        vm = executar_binario(binario, mapa)
+        if usar_rvc:
+            vm = executar_arquivo_rvc(arquivo, mapa)
+        else:
+            vm = executar_binario(binario, mapa)
+    else:
+        try:
+            from simulator import executar_simulacao_visual
+        except ModuleNotFoundError as e:
+            if e.name == "pygame":
+                raise ValueError(
+                    "Pygame nao instalado. Instale dependencias ou execute com --no-visual."
+                ) from e
+            raise
+        print("\nAbrindo simulador visual...")
+        vm = executar_simulacao_visual(programa, mapa, titulo=f"Curiosity-L - {arquivo.name}")
 
     print(f"\n{vm.resumo()}")
     if vm.parado and vm.mensagem:
@@ -79,6 +101,11 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Arquivo ja e .rvc (nao recompila)",
     )
+    p_exec.add_argument(
+        "--no-visual",
+        action="store_true",
+        help="Executa sem abrir janela Pygame",
+    )
 
     args = parser.parse_args(argv)
 
@@ -86,7 +113,7 @@ def main(argv: list[str] | None = None) -> int:
         if args.comando == "compilar":
             return cmd_compilar(args.arquivo, args.saida)
         if args.comando == "executar":
-            return cmd_executar(args.arquivo, args.rvc)
+            return cmd_executar(args.arquivo, args.rvc, args.no_visual)
     except (FileNotFoundError, ValueError, ErroVM) as e:
         print(f"Erro: {e}", file=sys.stderr)
         return 1
