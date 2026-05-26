@@ -88,6 +88,9 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description="Compilador e VM da linguagem Rover (Curiosity-L)"
     )
+    parser.add_argument(
+        "-v", "--verbose", action="store_true", help="Ativa logs detalhados (DEBUG)"
+    )
     sub = parser.add_subparsers(dest="comando", required=True)
 
     p_comp = sub.add_parser("compilar", help="Compila .rover para IR e .rvc")
@@ -108,6 +111,10 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     args = parser.parse_args(argv)
+
+    import logging
+    nivel = logging.DEBUG if args.verbose else logging.WARNING
+    logging.basicConfig(level=nivel, format="%(levelname)s: %(message)s")
 
     try:
         if args.comando == "compilar":

@@ -105,7 +105,7 @@ O pipeline completo do compilador segue o fluxo clássico:
 Código-fonte (.rover) → [Lexer] → Tokens → [Parser] → AST → [Codegen] → IR → [Emissor] → .rvc
 ```
 
-Cada fase é independente e perfeitamente isolada. O parser **não relê o texto-fonte** — ele consome os tokens injetados pelo lexer através da classe ponte `TokenStreamLexer`. Essa abordagem acadêmica rigorosa impede a duplicação de processos, injetando os tokens gerados diretamente no Earley Parser do Lark.
+Cada fase é independente e perfeitamente isolada. O parser **não relê o texto-fonte** — ele consome os tokens injetados pelo lexer através da classe ponte `TokenStreamLexer`. Essa abordagem rigorosa impede a duplicação de processos, injetando os tokens gerados diretamente no Earley Parser do Lark.
 
 ### Arquitetura do Compilador (`/compiler`)
 

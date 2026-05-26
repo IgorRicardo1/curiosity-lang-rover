@@ -3,8 +3,11 @@ Maquina Virtual — ciclo fetch, decode, execute.
 
 pc = indice na lista de instrucoes (mesma numeracao da IR).
 """
+<<<<<<< HEAD
 from dataclasses import dataclass
 from typing import Callable
+=======
+>>>>>>> 58abb0050fadf382156543eb521c3d916609450e
 
 from .estado import NOMES_DIRECAO, Rover, Mapa, DELTAS
 from .isa import (
@@ -18,6 +21,12 @@ from .isa import (
     OP_RECUA,
     OP_SALVA_REG,
 )
+
+
+import logging
+import time
+
+logger = logging.getLogger(__name__)
 
 
 class ErroVM(Exception):
@@ -51,20 +60,43 @@ class MaquinaVirtual:
         self._ao_evento = ao_evento
 
     def executar(self) -> Rover:
+<<<<<<< HEAD
         self._emitir_evento("inicio")
         while self.pc < len(self.programa) and not self.parado:
             instr = self._fetch()
             self.pc = self._execute(instr)
         if not self.parado:
             self._emitir_evento("fim")
+=======
+        inicio = time.time()
+        instrucoes_executadas = 0
+        while self.pc < len(self.programa) and not self.parado:
+            instr = self._fetch()
+            self.pc = self._execute(instr)
+            instrucoes_executadas += 1
+            if instrucoes_executadas % 100000 == 0:
+                logger.debug(
+                    f"[VM] Executadas {instrucoes_executadas} instrucoes ate agora..."
+                )
+
+        tempo = time.time() - inicio
+        if tempo > 0:
+            cps = instrucoes_executadas / tempo
+            logger.debug(
+                f"[VM] FIM: Executadas {instrucoes_executadas} instrucoes em {tempo:.4f}s ({cps:.0f} inst/s)"
+            )
+        else:
+            logger.debug(
+                f"[VM] FIM: Executadas {instrucoes_executadas} instrucoes (muito rapido)"
+            )
+
+>>>>>>> 58abb0050fadf382156543eb521c3d916609450e
         return self.rover
 
     def _fetch(self) -> Instrucao:
-        # Pega a proxima instrucao baseada no PC
         return self.programa[self.pc]
 
     def _execute(self, instr: Instrucao) -> int:
-        # Decodifica e executa alterando o estado
         op = instr.opcode
         args = instr.operandos
 
@@ -109,7 +141,7 @@ class MaquinaVirtual:
             reg, indice = args[0], args[1]
             valor = self.regs.get(reg, 0) - 1
             self.regs[reg] = valor
-            if valor != 0:
+            if valor > 0:
                 return indice
             return self.pc + 1
 
