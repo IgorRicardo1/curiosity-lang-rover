@@ -23,3 +23,6 @@ Thumbs.db
 
 # Bytecode compilado
 *.rvc
+
+# Arquivos de trabalho temporários
+programa.rover

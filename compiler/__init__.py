@@ -6,6 +6,7 @@ from .gerador_ir import GeradorIR
 from .ir import ProgramaIR
 from .lexer import tokenizacao
 from .parser import RoverParser
+from .validador import exigir_ir_valido
 
 
 def compilar(code: str) -> ProgramaIR:
@@ -19,15 +20,11 @@ def compilar(code: str) -> ProgramaIR:
     except Exception as e:
         raise ValueError(f"Erro Sintatico: {e}")
     programa = GeradorIR().gerar(ast)
-    from vm.validador import exigir_ir_valido
-
     exigir_ir_valido(programa)
     return programa
 
 
 def para_binario(ir: ProgramaIR) -> bytes:
     """IR já compilado → bytes .rvc."""
-    from vm.validador import exigir_ir_valido
-
     exigir_ir_valido(ir)
     return emitir(ir)

@@ -6,15 +6,14 @@ from .estado import Mapa, Rover
 from .isa import Instrucao, decodificar
 from .maquina import ErroVM, MaquinaVirtual
 from .validador import (
-    exigir_ir_valido,
     validar_binario,
     validar_instrucoes,
-    validar_ir,
 )
 
 
 def executar_ir(programa_ir, mapa: Mapa | None = None) -> MaquinaVirtual:
     from compiler.emissor import emitir
+    from compiler.validador import exigir_ir_valido
 
     exigir_ir_valido(programa_ir)
     return executar_binario(emitir(programa_ir), mapa)

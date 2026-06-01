@@ -38,6 +38,7 @@ class MaquinaVirtual:
         self.pc = 0
         self.parado = False
         self.mensagem: str | None = None
+        self.historico: list[tuple[int, int]] = [(self.rover.x, self.rover.y)]
 
     def executar(self) -> Rover:
         inicio = time.time()
@@ -63,6 +64,15 @@ class MaquinaVirtual:
             )
 
         return self.rover
+
+    def passo(self) -> bool:
+        """Executa exatamente UMA instrução (fetch-decode-execute).
+        Retorna True se pode continuar, False se programa acabou ou rover parou."""
+        if self.pc >= len(self.programa) or self.parado:
+            return False
+        instr = self._fetch()
+        self.pc = self._execute(instr)
+        return self.pc < len(self.programa) and not self.parado
 
     def _fetch(self) -> Instrucao:
         return self.programa[self.pc]
@@ -136,6 +146,7 @@ class MaquinaVirtual:
                 self.mensagem = f"Colisao com obstaculo em ({nx}, {ny})"
                 return
             self.rover.x, self.rover.y = nx, ny
+            self.historico.append((self.rover.x, self.rover.y))
 
     def resumo(self) -> str:
         d = NOMES_DIRECAO[self.rover.direcao]
