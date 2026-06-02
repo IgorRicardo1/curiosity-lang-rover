@@ -60,6 +60,7 @@ def cmd_executar(arquivo: Path, usar_rvc: bool, no_visual: bool) -> int:
         print(f"Compilado: {len(programa_ir.instrucoes)} instrucoes, {len(binario)} bytes")
 
     if no_visual:
+        # Modo texto (bom para CI/QA automatico sem janela grafica).
         print("\nExecucao VM (fetch -> decode -> execute):")
         if usar_rvc:
             vm = executar_arquivo_rvc(arquivo, mapa)

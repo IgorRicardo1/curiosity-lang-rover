@@ -1,10 +1,15 @@
 """
 Análise sintática — monta a AST a partir de tokens produzidos pelo lexer.
 """
+import logging
+import time
+
 from lark import Lark
 from lark.lexer import Lexer
 
 from .lexer import load_grammar
+
+logger = logging.getLogger(__name__)
 
 _token_parser = None
 
@@ -29,11 +34,6 @@ def get_token_parser() -> Lark:
     return _token_parser
 
 
-import logging
-import time
-
-logger = logging.getLogger(__name__)
-
 class RoverParser:
     def __init__(self):
         self._parser = get_token_parser()
@@ -45,3 +45,4 @@ class RoverParser:
         tempo = time.time() - inicio
         logger.debug(f"[PARSER] AST gerada em {tempo:.4f}s")
         return ast
+

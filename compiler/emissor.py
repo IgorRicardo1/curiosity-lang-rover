@@ -4,7 +4,7 @@ Emissor — traduz ProgramaIR (texto) para bytes .rvc (sem cabecalho).
 import logging
 import time
 from .ir import ProgramaIR
-from vm.isa import codificar_linha_ir
+from shared.isa import codificar_linha_ir
 
 logger = logging.getLogger(__name__)
 

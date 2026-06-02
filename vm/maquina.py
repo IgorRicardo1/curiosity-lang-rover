@@ -3,11 +3,10 @@ Maquina Virtual — ciclo fetch, decode, execute.
 
 pc = indice na lista de instrucoes (mesma numeracao da IR).
 """
-<<<<<<< HEAD
 from dataclasses import dataclass
 from typing import Callable
-=======
->>>>>>> 58abb0050fadf382156543eb521c3d916609450e
+import logging
+import time
 
 from .estado import NOMES_DIRECAO, Rover, Mapa, DELTAS
 from .isa import (
@@ -21,10 +20,6 @@ from .isa import (
     OP_RECUA,
     OP_SALVA_REG,
 )
-
-
-import logging
-import time
 
 logger = logging.getLogger(__name__)
 
@@ -57,17 +52,13 @@ class MaquinaVirtual:
         self.pc = 0
         self.parado = False
         self.mensagem: str | None = None
+        # Callback opcional usado pelo simulador visual para animar eventos.
         self._ao_evento = ao_evento
+        # Historico simples das celulas visitadas (util para debug e overlays).
+        self.historico: list[tuple[int, int]] = [(self.rover.x, self.rover.y)]
 
     def executar(self) -> Rover:
-<<<<<<< HEAD
         self._emitir_evento("inicio")
-        while self.pc < len(self.programa) and not self.parado:
-            instr = self._fetch()
-            self.pc = self._execute(instr)
-        if not self.parado:
-            self._emitir_evento("fim")
-=======
         inicio = time.time()
         instrucoes_executadas = 0
         while self.pc < len(self.programa) and not self.parado:
@@ -89,9 +80,18 @@ class MaquinaVirtual:
             logger.debug(
                 f"[VM] FIM: Executadas {instrucoes_executadas} instrucoes (muito rapido)"
             )
-
->>>>>>> 58abb0050fadf382156543eb521c3d916609450e
+        if not self.parado:
+            self._emitir_evento("fim")
         return self.rover
+
+    def passo(self) -> bool:
+        """Executa exatamente UMA instrução (fetch-decode-execute).
+        Retorna True se pode continuar, False se programa acabou ou rover parou."""
+        if self.pc >= len(self.programa) or self.parado:
+            return False
+        instr = self._fetch()
+        self.pc = self._execute(instr)
+        return self.pc < len(self.programa) and not self.parado
 
     def _fetch(self) -> Instrucao:
         return self.programa[self.pc]
@@ -170,6 +170,7 @@ class MaquinaVirtual:
                 return
             self.rover.x, self.rover.y = nx, ny
             self._emitir_evento("movimento")
+            self.historico.append((self.rover.x, self.rover.y))
 
     def _emitir_evento(self, tipo: str, mensagem: str | None = None) -> None:
         if self._ao_evento is None:

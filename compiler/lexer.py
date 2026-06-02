@@ -2,15 +2,15 @@
 Análise léxica — converte texto-fonte em tokens.
 """
 
-import os
-from lark import Lark
-
-_lark_instance = None
-
 import logging
+import os
 import time
 
+from lark import Lark
+
 logger = logging.getLogger(__name__)
+
+_lark_instance = None
 
 
 def load_grammar() -> str:
@@ -33,3 +33,4 @@ def tokenizacao(code: str):
     tempo = time.time() - inicio
     logger.debug(f"[LEXER] Gerados {len(tokens)} tokens em {tempo:.4f}s")
     return tokens
+

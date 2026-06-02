@@ -94,8 +94,9 @@ Detalhes técnicos da implementação do compilador e da máquina virtual.
 - [x] **Análise Sintática (Parser):** Traduz tokens ➔ **AST** (Concluído)
 - [x] **Back-end do Compilador (Codegen):** Traduz AST ➔ **IR** (mnemônicos) (Concluído)
 - [x] **Emissor binário:** Traduz IR ➔ **`.rvc`** (bytes) (Concluído)
-- [x] **Validação:** IR e binário (`vm/validador.py`)
-- [x] **Leitor binário:** `vm/carregar.py` + `vm/isa.decodificar`
+- [x] **Validação de IR:** `compiler/validador.py` (validação da representação intermediária)
+- [x] **Validação de bytecode:** `vm/validador.py` (validação do binário decodificado)
+- [x] **Leitor binário:** `vm/carregar.py` + `shared/isa.decodificar`
 - [x] **Máquina Virtual:** fetch-decode-execute (`vm/maquina.py`)
 - [x] **Simulador (Pygame):** Grid 15x15, animação do rover e alertas visuais
 
@@ -116,9 +117,18 @@ Cada fase é independente e perfeitamente isolada. O parser **não relê o texto
 | `parser.py` | Análise sintática: `parse_tokens(tokens)` → AST |
 | `gerador_ir.py` | Geração de IR a partir da AST (`GeradorIR`) |
 | `ir.py` | Estrutura `ProgramaIR` (instruções + tabela de rótulos) |
+| `validador.py` | Validação da IR antes da emissão (`validar_ir`, `exigir_ir_valido`) |
 | `emissor.py` | Emissão IR → bytes `.rvc` |
 | `test_compiler.py` | Script de teste das fases do compilador |
 | `__init__.py` | `compilar()` e `para_binario()` |
+
+### Especificação da ISA (`/shared`)
+
+A ISA (Instruction Set Architecture) é o **contrato formal** entre o compilador e a VM. Assim como a especificação x86 não pertence nem ao GCC nem ao processador, a ISA é uma definição neutra que ambos os lados respeitam.
+
+| Arquivo | Responsabilidade |
+| :--- | :--- |
+| `isa.py` | Opcodes, `Instrucao`, codificação IR→bytes (`codificar_linha_ir`) e decodificação bytes→instruções (`decodificar`) |
 
 **Erros separados por fase:**
 - **Erro léxico** — palavra ou símbolo desconhecido (ex: `MOVER(5)`).
@@ -210,17 +220,34 @@ Rótulos **não** entram no binário — só índices já resolvidos nos saltos.
 ## 6. Organização e Contribuição
 
 ### Estrutura de Pastas
-*   `/compiler`: Lógica de tradução — lexer, parser, codegen (Lark + bytecode).
-    *   `grammar.lark` — definição da gramática
+
+A organização segue a separação teórica clássica de compiladores:
+
+*   `/compiler`: **Front-end e middle-end** — tradução do código-fonte até bytecode.
+    *   `grammar.lark` — definição da gramática (EBNF)
     *   `lexer.py` / `parser.py` — fases léxica e sintática (cada um com sua instância Lark)
-    *   `gerador_ir.py` — geração de IR
-    *   `test_compiler.py` — testes do pipeline
-*   `/vm`: Leitor binário, validação, VM (`isa`, `carregar`, `validador`, `maquina`, `estado`).
-*   `/simulator`: Parte visual (Pygame, Grid, animação e alertas).
-*   `/examples`: Pasta para scripts `.rover` de exemplo (a criar).
-*   `/docs`: Documentos técnicos e PDF da Atividade A3 (a criar).
-*   `main.py`: CLI (`compilar`, `executar` — VM em breve).
-*   `examples/`: Scripts `.rover` de exemplo.
+    *   `gerador_ir.py` — geração da representação intermediária (AST → IR)
+    *   `ir.py` — estrutura `ProgramaIR` (conceito interno do compilador)
+    *   `validador.py` — validação da IR antes da emissão
+    *   `emissor.py` — emissão de bytecode (IR → `.rvc`)
+    *   `test_compiler.py` — testes do pipeline completo
+*   `/shared`: **Especificação da ISA** — contrato entre compilador e VM.
+    *   `isa.py` — opcodes, codificação e decodificação de instruções
+*   `/vm`: **Back-end de execução** — validação de bytecode e ciclo fetch-decode-execute.
+    *   `validador.py` — validação do binário decodificado
+    *   `maquina.py` — Máquina Virtual (execução contínua e passo a passo)
+    *   `estado.py` — estado do Rover e Mapa 15×15
+    *   `carregar.py` — leitor de arquivos `.rvc`
+*   `/simulator`: Parte visual com Pygame (grid, animação, efeitos e áudio).
+*   `/examples`: Scripts `.rover` de exemplo.
+*   `/docs`: Documentos técnicos e PDF da Atividade A3.
+*   `main.py`: CLI (`compilar`, `executar`).
+
+**Fluxo de dependências (unidirecional):**
+```
+compiler/ ──→ shared/isa ←── vm/
+```
+O compilador e a VM nunca se importam diretamente — ambos dependem apenas da especificação da ISA.
 
 ### Regras de Ouro
 1. **Branches:** Nunca mude a `main` direto. Use `feature/nome-da-task`.

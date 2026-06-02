@@ -59,7 +59,8 @@ def teste(code):
         print("\n5. VALIDACAO E VM (fetch-decode-execute):")
         print("-" * 30)
         from vm import executar_binario
-        from vm.validador import validar_ir, validar_binario
+        from vm.validador import validar_binario
+        from .validador import validar_ir
 
         erros_ir = validar_ir(programa)
         erros_bin = validar_binario(binario)
