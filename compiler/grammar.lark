@@ -16,16 +16,17 @@ controle: SE OBSTACULO ENTAO "{" instrucao+ "}" -> se_obstaculo
         | REPITA NUMBER "{" instrucao+ "}"      -> repita
 
 
-AVANCA: "AVANCA" | "AVA"
-RECUA: "RECUA" | "REC"
-GIRA: "GIRA" | "GIR"
-DIREITA: "DIREITA" | "DIR"
-ESQUERDA: "ESQUERDA" | "ESQ"
-REPITA: "REPITA" | "REP"
-SE: "SE"
-OBSTACULO: "OBSTACULO" | "OBS"
-ENTAO: "ENTAO"
+AVANCA: /AVANCA|AVA/
+RECUA: /RECUA|REC/
+GIRA: /GIRA|GIR/
+DIREITA: /DIREITA|DIR/
+ESQUERDA: /ESQUERDA|ESQ/
+REPITA: /REPITA|REP/
+SE: /SE/
+OBSTACULO: /OBSTACULO|OBS/
+ENTAO: /ENTAO/
 
-%import common.NUMBER
-%import common.WS
+// Expressões regulares explícitas (ao invés de importadas)
+NUMBER: /-?\d+/
+WS: /[ \t\n\r]+/
 %ignore WS

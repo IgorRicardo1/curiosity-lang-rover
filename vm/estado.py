@@ -1,4 +1,5 @@
 """Estado do rover e mapa 15x15."""
+
 from dataclasses import dataclass, field
 
 TAMANHO_MAPA = 15
@@ -6,6 +7,7 @@ TAMANHO_MAPA = 15
 # 0=Norte (y-1), 1=Leste (x+1), 2=Sul (y+1), 3=Oeste (x-1)
 DELTAS = [(0, -1), (1, 0), (0, 1), (-1, 0)]
 NOMES_DIRECAO = ["N", "L", "S", "O"]
+
 
 @dataclass
 class Mapa:
@@ -16,6 +18,7 @@ class Mapa:
 
     def tem_obstaculo(self, x: int, y: int) -> bool:
         return (x, y) in self.obstaculos
+
 
 @dataclass
 class Rover:

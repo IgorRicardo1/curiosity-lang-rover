@@ -14,7 +14,7 @@ from vm.estado import Mapa, NOMES_DIRECAO, TAMANHO_MAPA
 from vm.isa import Instrucao
 from vm.maquina import ErroVM, EventoVM, MaquinaVirtual
 
-# Bloco "tune ao vivo": os valores abaixo mudam bastante o feeling da demo.
+
 CELL_SIZE = 40
 GRID_PADDING = 24
 TOP_HUD = 86
@@ -91,7 +91,7 @@ class SistemaAudio:
             self._som_ambiente = None
 
     def _criar_tom(self, freq: float, duracao: float, volume: float, onda: str) -> pygame.mixer.Sound:
-        # Audio procedural para nao depender de arquivos .wav externos na apresentação.
+
         taxa = 22050
         total = max(1, int(taxa * duracao))
         dados = array("h")
@@ -254,7 +254,7 @@ def _rodar_janela(eventos: Sequence[EventoVM], mapa: Mapa, titulo: str) -> None:
         shake_restante = max(shake_restante, _aplicar_evento(eventos[0], particulas, sistema_audio))
 
         while em_execucao:
-            # Loop principal da cena (entrada + simulacao + render por frame).
+
             dt = clock.tick(FPS) / 1000.0
             tempo_total += dt
 
@@ -596,7 +596,7 @@ def _status_evento(evento: EventoVM, status_atual: str) -> str:
 def _aplicar_evento(
     evento: EventoVM, particulas: list[Particula], sistema_audio: SistemaAudio
 ) -> float:
-    # Mapa central de feedback: cada evento da VM dispara resposta visual + sonora.
+
     mensagem = (evento.mensagem or "").lower()
 
     if evento.tipo == "inicio":

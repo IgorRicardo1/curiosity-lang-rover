@@ -52,9 +52,7 @@ class MaquinaVirtual:
         self.pc = 0
         self.parado = False
         self.mensagem: str | None = None
-        # Callback opcional usado pelo simulador visual para animar eventos.
         self._ao_evento = ao_evento
-        # Historico simples das celulas visitadas (util para debug e overlays).
         self.historico: list[tuple[int, int]] = [(self.rover.x, self.rover.y)]
 
     def executar(self) -> Rover:
