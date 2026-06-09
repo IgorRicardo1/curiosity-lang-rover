@@ -157,15 +157,13 @@ class MaquinaVirtual:
                 dx, dy = -dx, -dy
             nx, ny = self.rover.x + dx, self.rover.y + dy
             if not self.mapa.dentro(nx, ny):
-                self.parado = True
-                self.mensagem = f"Rover saiu do mapa em ({nx}, {ny})"
-                self._emitir_evento("colisao", self.mensagem)
-                return
+                self.rover.direcao = (self.rover.direcao - 1) % 4
+                self._emitir_evento("giro")
+                continue
             if self.mapa.tem_obstaculo(nx, ny):
-                self.parado = True
-                self.mensagem = f"Colisao com obstaculo em ({nx}, {ny})"
-                self._emitir_evento("colisao", self.mensagem)
-                return
+                self.rover.direcao = (self.rover.direcao - 1) % 4
+                self._emitir_evento("giro")
+                continue
             self.rover.x, self.rover.y = nx, ny
             self._emitir_evento("movimento")
             self.historico.append((self.rover.x, self.rover.y))

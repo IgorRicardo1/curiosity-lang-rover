@@ -76,7 +76,7 @@ def teste(code):
 
 
 if __name__ == "__main__":
-    teste("AVANCA(10)")
+    teste("AVANCA(2)")
     teste("REPITA 2 { SE OBSTACULO ENTAO { GIRA(ESQUERDA) } AVANCA(1) }")
     teste("MOVER(5)")
     teste("AVANCA()")
